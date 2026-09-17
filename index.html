@@ -139,7 +139,36 @@ const supabase = window.supabase.createClient(
     supabaseUrl,
     supabaseKey
 );
-</script>
-</body>
+    <script>
+async function saveTable() {
 
+    var table = document.querySelector("table");
+    var tableData = [];
+
+    for (var i = 0; i < table.rows.length; i++) {
+
+        var rowData = [];
+
+        for (var j = 0; j < table.rows[i].cells.length; j++) {
+            rowData.push(table.rows[i].cells[j].innerText);
+        }
+
+        tableData.push(rowData);
+    }
+
+    const { error } = await supabase
+        .from("bus_data")
+        .insert({
+            data: tableData
+        });
+
+    if (error) {
+        alert("❌ Save failed: " + error.message);
+    } else {
+        alert("✅ Bus data saved!");
+    }
+}
+</script>
+
+</body>
 </html>
