@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,7 +47,6 @@
         th,
         td {
             border: 2px solid #333;
-            padding: 0;
             text-align: left;
             vertical-align: middle;
         }
@@ -55,23 +55,21 @@
             background: #f2f2f2;
             font-size: 20px;
             padding: 12px;
+            height: 80px;
         }
 
         td {
-            min-height: 55px;
             font-size: 18px;
+            min-height: 60px;
         }
 
-        /* The editable area */
         td[contenteditable="true"] {
             padding: 14px;
-            min-height: 55px;
+            min-height: 60px;
             outline: none;
-
-            /* Allow long words/text */
             white-space: normal;
-            overflow-wrap: anywhere;
-            word-break: break-word;
+            overflow-wrap: break-word;
+            word-break: normal;
         }
 
         td[contenteditable="true"]:focus {
@@ -175,14 +173,19 @@
         // SUPABASE SETTINGS
         // ==========================================
 
-        const SUPABASE_URL = "https://nmzbitljukawlkhxnrlf.supabase.co";
+        const SUPABASE_URL =
+            "https://nmzbitljukawlkhxnrlf.supabase.co";
 
-        const SUPABASE_ANON_KEY = "sb_publishable_ZiAF771-GgJMzToVMdsDIg_-ag7jxAw";
+        const SUPABASE_ANON_KEY =
+            "sb_publishable_ZiAF771-GgJMzToVMdsDIg_-ag7jxAw";
 
-        const supabaseClient = supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_ANON_KEY
-        );
+        const TABLE_NAME = "Data_Bus";
+
+        const supabaseClient =
+            supabase.createClient(
+                SUPABASE_URL,
+                SUPABASE_ANON_KEY
+            );
 
 
         // ==========================================
@@ -191,17 +194,22 @@
 
         function addRow() {
 
-            const table = document.getElementById("busTable");
+            const table =
+                document.getElementById("busTable");
 
-            const tbody = table.querySelector("tbody");
+            const tbody =
+                table.querySelector("tbody");
 
-            const columnCount = table.rows[0].cells.length;
+            const columnCount =
+                table.querySelector("thead tr").cells.length;
 
-            const row = document.createElement("tr");
+            const row =
+                document.createElement("tr");
 
             for (let i = 0; i < columnCount; i++) {
 
-                const cell = document.createElement("td");
+                const cell =
+                    document.createElement("td");
 
                 cell.contentEditable = "true";
 
@@ -220,22 +228,27 @@
 
         function addColumn() {
 
-            const table = document.getElementById("busTable");
+            const table =
+                document.getElementById("busTable");
 
-            const headerRow = table.querySelector("thead tr");
+            const headerRow =
+                table.querySelector("thead tr");
 
-            const newHeader = document.createElement("th");
+            const newHeader =
+                document.createElement("th");
 
             newHeader.innerText = "New Column";
 
             headerRow.appendChild(newHeader);
 
 
-            const rows = table.querySelectorAll("tbody tr");
+            const rows =
+                table.querySelectorAll("tbody tr");
 
             rows.forEach(function(row) {
 
-                const cell = document.createElement("td");
+                const cell =
+                    document.createElement("td");
 
                 cell.contentEditable = "true";
 
@@ -253,36 +266,40 @@
 
         function getTableData() {
 
-            const table = document.getElementById("busTable");
+            const table =
+                document.getElementById("busTable");
 
             const headers = [];
 
-            const headerCells = table.querySelectorAll("thead th");
+            table.querySelectorAll("thead th")
+                .forEach(function(cell) {
 
-            headerCells.forEach(function(cell) {
+                    headers.push(
+                        cell.innerText.trim()
+                    );
 
-                headers.push(cell.innerText.trim());
-
-            });
+                });
 
 
             const rows = [];
 
-            const bodyRows = table.querySelectorAll("tbody tr");
+            table.querySelectorAll("tbody tr")
+                .forEach(function(row) {
 
-            bodyRows.forEach(function(row) {
+                    const rowData = [];
 
-                const rowData = [];
+                    row.querySelectorAll("td")
+                        .forEach(function(cell) {
 
-                row.querySelectorAll("td").forEach(function(cell) {
+                            rowData.push(
+                                cell.innerText.trim()
+                            );
 
-                    rowData.push(cell.innerText.trim());
+                        });
+
+                    rows.push(rowData);
 
                 });
-
-                rows.push(rowData);
-
-            });
 
 
             return {
@@ -293,26 +310,30 @@
 
 
         // ==========================================
-        // SAVE DATA TO SUPABASE
+        // SAVE DATA
         // ==========================================
 
         async function saveData() {
 
-            const message = document.getElementById("message");
+            const message =
+                document.getElementById("message");
 
-            message.innerText = "⏳ Saving...";
+            message.innerText =
+                "⏳ Saving...";
 
-            const tableData = getTableData();
+
+            const tableData =
+                getTableData();
 
 
             try {
 
-                // Remove old saved data
+                // Delete previous saved row
                 const { error: deleteError } =
                     await supabaseClient
-                        .from("bus_data")
+                        .from(TABLE_NAME)
                         .delete()
-                        .neq("id", 0);
+                        .gte("id", 0);
 
 
                 if (deleteError) {
@@ -320,16 +341,17 @@
                     console.error(deleteError);
 
                     message.innerText =
-                        "❌ Delete error: " + deleteError.message;
+                        "❌ Delete error: " +
+                        deleteError.message;
 
                     return;
                 }
 
 
-                // Save new data
+                // Insert new saved data
                 const { error: insertError } =
                     await supabaseClient
-                        .from("bus_data")
+                        .from(TABLE_NAME)
                         .insert([
                             {
                                 data: tableData
@@ -342,7 +364,8 @@
                     console.error(insertError);
 
                     message.innerText =
-                        "❌ Save error: " + insertError.message;
+                        "❌ Save error: " +
+                        insertError.message;
 
                     return;
                 }
@@ -351,8 +374,9 @@
                 message.innerText =
                     "✅ Bus data saved successfully!";
 
+            }
 
-            } catch (error) {
+            catch (error) {
 
                 console.error(error);
 
@@ -360,26 +384,28 @@
                     "❌ Something went wrong.";
 
             }
-
         }
 
 
         // ==========================================
-        // LOAD DATA FROM SUPABASE
+        // LOAD DATA
         // ==========================================
 
         async function loadData() {
 
-            const message = document.getElementById("message");
+            const message =
+                document.getElementById("message");
 
 
             try {
 
                 const { data, error } =
                     await supabaseClient
-                        .from("bus_data")
+                        .from(TABLE_NAME)
                         .select("*")
-                        .order("id", { ascending: false })
+                        .order("id", {
+                            ascending: false
+                        })
                         .limit(1);
 
 
@@ -388,7 +414,8 @@
                     console.error(error);
 
                     message.innerText =
-                        "❌ Load error: " + error.message;
+                        "❌ Load error: " +
+                        error.message;
 
                     return;
                 }
@@ -403,7 +430,8 @@
                 }
 
 
-                const savedData = data[0].data;
+                const savedData =
+                    data[0].data;
 
 
                 if (!savedData) {
@@ -419,9 +447,9 @@
                     document.getElementById("busTable");
 
 
-                // -------------------------------
-                // Restore headers
-                // -------------------------------
+                // ==================================
+                // RESTORE HEADERS
+                // ==================================
 
                 const headerRow =
                     table.querySelector("thead tr");
@@ -429,20 +457,23 @@
                 headerRow.innerHTML = "";
 
 
-                savedData.headers.forEach(function(header) {
+                savedData.headers.forEach(
+                    function(header) {
 
-                    const th = document.createElement("th");
+                        const th =
+                            document.createElement("th");
 
-                    th.innerText = header;
+                        th.innerText = header;
 
-                    headerRow.appendChild(th);
+                        headerRow.appendChild(th);
 
-                });
+                    }
+                );
 
 
-                // -------------------------------
-                // Restore body
-                // -------------------------------
+                // ==================================
+                // RESTORE ROWS
+                // ==================================
 
                 const tbody =
                     table.querySelector("tbody");
@@ -450,35 +481,43 @@
                 tbody.innerHTML = "";
 
 
-                savedData.rows.forEach(function(rowData) {
+                savedData.rows.forEach(
+                    function(rowData) {
 
-                    const row = document.createElement("tr");
-
-
-                    rowData.forEach(function(value) {
-
-                        const cell =
-                            document.createElement("td");
-
-                        cell.contentEditable = "true";
-
-                        cell.innerText = value;
-
-                        row.appendChild(cell);
-
-                    });
+                        const row =
+                            document.createElement("tr");
 
 
-                    tbody.appendChild(row);
+                        rowData.forEach(
+                            function(value) {
 
-                });
+                                const cell =
+                                    document.createElement("td");
+
+                                cell.contentEditable =
+                                    "true";
+
+                                cell.innerText =
+                                    value;
+
+                                row.appendChild(cell);
+
+                            }
+                        );
+
+
+                        tbody.appendChild(row);
+
+                    }
+                );
 
 
                 message.innerText =
                     "✅ Saved bus data loaded!";
 
+            }
 
-            } catch (error) {
+            catch (error) {
 
                 console.error(error);
 
@@ -486,7 +525,6 @@
                     "❌ Could not load data.";
 
             }
-
         }
 
 
@@ -494,13 +532,15 @@
         // LOAD WHEN WEBSITE OPENS
         // ==========================================
 
-        window.addEventListener("load", function() {
-
-            loadData();
-
-        });
+        window.addEventListener(
+            "load",
+            function() {
+                loadData();
+            }
+        );
 
     </script>
 
 </body>
+
     </html>
