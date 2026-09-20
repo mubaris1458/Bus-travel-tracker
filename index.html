@@ -1,35 +1,59 @@
+
 <!DOCTYPE html>
 <html>
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>College Bus Tracker</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         body {
-            font-size: 20px;
+            font-family: Arial, sans-serif;
+            margin: 10px;
+        }
+
+        h1 {
+            font-size: 28px;
         }
 
         table {
-            font-size: 24px;
             border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
         }
 
         th, td {
-            padding: 15px;
-            border: 2px solid black;
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-size: 16px;
         }
 
         input {
-            font-size: 20px;
-            padding: 8px;
-            width: 180px;
+            width: 95%;
             box-sizing: border-box;
+            padding: 7px;
+            font-size: 15px;
         }
 
         button {
-            font-size: 20px;
-            padding: 10px;
-            margin: 10px 5px;
+            padding: 9px 12px;
+            margin-top: 12px;
+            margin-right: 6px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -42,132 +66,461 @@
 
     <table id="busTable">
 
-        <tr>
-            <th>Starting Place</th>
-            <th>Time</th>
-            <th>Bus Stops</th>
-            <th>Notes</th>
-        </tr>
+        <thead>
+            <tr>
+                <th>Starting Place</th>
+                <th>Time</th>
+                <th>Bus Stops</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
 
-        <tr>
-            <td>
-                <input type="text" value="Your Place">
-            </td>
+        <tbody>
 
-            <td>
-                <input type="text" value="6:30 AM">
-            </td>
+            <tr>
+                <td>
+                    <input type="text" value="Your Place">
+                </td>
 
-            <td>
-                <input type="text" value="Stop 1, Stop 2">
-            </td>
+                <td>
+                    <input type="text" value="6:30 AM">
+                </td>
 
-            <td>
-                <input type="text" value="Morning bus">
-            </td>
-        </tr>
+                <td>
+                    <input type="text" value="Stop 1, Stop 2">
+                </td>
+
+                <td>
+                    <input type="text" value="Morning bus">
+                </td>
+            </tr>
+
+        </tbody>
 
     </table>
-
-    <br>
 
     <button onclick="addRow()">➕ Add Row</button>
 
     <button onclick="addColumn()">➕ Add Column</button>
+
     <button onclick="saveTable()">💾 Save Changes</button>
 
+    <div id="status"></div>
 
-    <script>
 
-        function addRow() {
+<script>
 
-            var table = document.getElementById("busTable");
+    // ==============================
+    // SUPABASE CONNECTION
+    // ==============================
 
-            var row = table.insertRow();
+    const SUPABASE_URL =
+        "https://nmzbitljukawlkhxnrlf.supabase.co";
 
-            var cell1 = row.insertCell(0);
-            var cell2 = row.insertCell(1);
-            var cell3 = row.insertCell(2);
-            var cell4 = row.insertCell(3);
+    const SUPABASE_KEY =
+        "sb_publishable_ZiAF771-GgJMzToVMdsDIg_-ag7jxAw";
 
-            cell1.innerHTML =
-                '<input type="text" placeholder="Enter place">';
+    const supabaseClient =
+        window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+        );
 
-            cell2.innerHTML =
-                '<input type="text" placeholder="Enter time">';
 
-            cell3.innerHTML =
-                '<input type="text" placeholder="Enter bus stop">';
+    // This stores the ID of the row
+    // that contains our current table.
+    let savedRowId = null;
 
-            cell4.innerHTML =
-                '<input type="text" placeholder="Enter notes">';
+
+    // ==============================
+    // ADD ROW
+    // ==============================
+
+    function addRow() {
+
+        const table =
+            document.getElementById("busTable");
+
+        const tbody =
+            table.querySelector("tbody");
+
+        const columnCount =
+            table.querySelector("thead tr").cells.length;
+
+        const row =
+            document.createElement("tr");
+
+        for (let i = 0; i < columnCount; i++) {
+
+            const cell =
+                document.createElement("td");
+
+            const input =
+                document.createElement("input");
+
+            input.type = "text";
+
+            input.placeholder = "Enter data";
+
+            cell.appendChild(input);
+
+            row.appendChild(cell);
         }
 
+        tbody.appendChild(row);
+    }
 
-        function addColumn() {
 
-            var name = prompt("Enter column name:");
+    // ==============================
+    // ADD COLUMN
+    // ==============================
 
-            if (name == null || name == "") {
+    function addColumn() {
+
+        const table =
+            document.getElementById("busTable");
+
+        const headerRow =
+            table.querySelector("thead tr");
+
+        const headerCell =
+            document.createElement("th");
+
+        headerCell.textContent =
+            "New Column";
+
+        headerRow.appendChild(headerCell);
+
+
+        const rows =
+            table.querySelectorAll("tbody tr");
+
+        rows.forEach(function(row) {
+
+            const cell =
+                document.createElement("td");
+
+            const input =
+                document.createElement("input");
+
+            input.type = "text";
+
+            input.placeholder = "Enter data";
+
+            cell.appendChild(input);
+
+            row.appendChild(cell);
+        });
+    }
+
+
+    // ==============================
+    // GET TABLE DATA
+    // ==============================
+
+    function getTableData() {
+
+        const table =
+            document.getElementById("busTable");
+
+        const data = [];
+
+        // Get headers
+        const headers = [];
+
+        const headerCells =
+            table.querySelectorAll("thead th");
+
+        headerCells.forEach(function(cell) {
+
+            headers.push(
+                cell.textContent
+            );
+        });
+
+        data.push(headers);
+
+
+        // Get rows
+        const rows =
+            table.querySelectorAll("tbody tr");
+
+        rows.forEach(function(row) {
+
+            const rowData = [];
+
+            const inputs =
+                row.querySelectorAll("input");
+
+            inputs.forEach(function(input) {
+
+                rowData.push(
+                    input.value
+                );
+            });
+
+            data.push(rowData);
+        });
+
+
+        return data;
+    }
+
+
+    // ==============================
+    // SAVE TABLE
+    // ==============================
+
+    async function saveTable() {
+
+        const status =
+            document.getElementById("status");
+
+        status.textContent =
+            "⏳ Saving...";
+
+
+        const tableData =
+            getTableData();
+
+
+        // --------------------------------
+        // If a saved row already exists,
+        // UPDATE it.
+        // --------------------------------
+
+        if (savedRowId !== null) {
+
+            const { error } =
+                await supabaseClient
+                    .from("bus_data")
+                    .update({
+                        data: tableData
+                    })
+                    .eq("id", savedRowId);
+
+
+            if (error) {
+
+                console.error(error);
+
+                status.textContent =
+                    "❌ Save failed: " +
+                    error.message;
+
                 return;
             }
 
-            var table = document.getElementById("busTable");
 
-            var header = table.rows[0].insertCell(-1);
+            status.textContent =
+                "✅ Bus data updated!";
 
-            header.innerHTML = name;
-
-            for (var i = 1; i < table.rows.length; i++) {
-
-                var cell = table.rows[i].insertCell(-1);
-
-                cell.innerHTML =
-                    '<input type="text" placeholder="Enter ' + name + '">';
-            }
+            return;
         }
 
-    </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script>
-const supabaseUrl = "https://nmzbitljukawlkhxnrlf.supabase.co";
+        // --------------------------------
+        // If no saved row exists,
+        // CREATE one.
+        // --------------------------------
 
-const supabaseKey = "sb_publishable_ZiAF771-GgJMzToVMdsDIg_-ag7jxAw";
+        const { data, error } =
+            await supabaseClient
+                .from("bus_data")
+                .insert({
+                    data: tableData
+                })
+                .select()
+                .single();
 
-const supabase = window.supabase.createClient(
-    supabaseUrl,
-    supabaseKey
-);
-    <script>
-async function saveTable() {
 
-    var table = document.querySelector("table");
-    var tableData = [];
+        if (error) {
 
-    for (var i = 0; i < table.rows.length; i++) {
+            console.error(error);
 
-        var rowData = [];
+            status.textContent =
+                "❌ Save failed: " +
+                error.message;
 
-        for (var j = 0; j < table.rows[i].cells.length; j++) {
-            rowData.push(table.rows[i].cells[j].innerText);
+            return;
         }
 
-        tableData.push(rowData);
+
+        // Remember the database row ID
+        savedRowId =
+            data.id;
+
+
+        status.textContent =
+            "✅ Bus data saved!";
     }
 
-    const { error } = await supabase
-        .from("bus_data")
-        .insert({
-            data: tableData
+
+    // ==============================
+    // LOAD TABLE
+    // ==============================
+
+    async function loadTable() {
+
+        const status =
+            document.getElementById("status");
+
+        status.textContent =
+            "⏳ Loading saved data...";
+
+
+        const { data, error } =
+            await supabaseClient
+                .from("bus_data")
+                .select("id, data")
+                .order("id", {
+                    ascending: false
+                })
+                .limit(1)
+                .maybeSingle();
+
+
+        if (error) {
+
+            console.error(error);
+
+            status.textContent =
+                "❌ Load failed: " +
+                error.message;
+
+            return;
+        }
+
+
+        // No data in database
+        if (!data) {
+
+            status.textContent =
+                "ℹ️ No saved bus data yet.";
+
+            return;
+        }
+
+
+        // Remember database ID
+        savedRowId =
+            data.id;
+
+
+        const tableData =
+            data.data;
+
+
+        if (!Array.isArray(tableData) ||
+            tableData.length === 0) {
+
+            status.textContent =
+                "❌ Saved data is empty.";
+
+            return;
+        }
+
+
+        // --------------------------------
+        // Rebuild table
+        // --------------------------------
+
+        const table =
+            document.getElementById("busTable");
+
+
+        const thead =
+            table.querySelector("thead");
+
+        const tbody =
+            table.querySelector("tbody");
+
+
+        // Clear old table
+        thead.innerHTML = "";
+
+        tbody.innerHTML = "";
+
+
+        // --------------------------------
+        // Headers
+        // --------------------------------
+
+        const headerRow =
+            document.createElement("tr");
+
+
+        tableData[0].forEach(function(header) {
+
+            const th =
+                document.createElement("th");
+
+            th.textContent =
+                header;
+
+            headerRow.appendChild(th);
         });
 
-    if (error) {
-        alert("❌ Save failed: " + error.message);
-    } else {
-        alert("✅ Bus data saved!");
+
+        thead.appendChild(headerRow);
+
+
+        // --------------------------------
+        // Rows
+        // --------------------------------
+
+        for (
+            let i = 1;
+            i < tableData.length;
+            i++
+        ) {
+
+            const row =
+                document.createElement("tr");
+
+
+            tableData[i].forEach(function(value) {
+
+                const cell =
+                    document.createElement("td");
+
+
+                const input =
+                    document.createElement("input");
+
+
+                input.type = "text";
+
+                input.value =
+                    value ?? "";
+
+
+                cell.appendChild(input);
+
+                row.appendChild(cell);
+            });
+
+
+            tbody.appendChild(row);
+        }
+
+
+        status.textContent =
+            "✅ Saved bus data loaded!";
     }
-}
+
+
+    // ==============================
+    // LOAD AUTOMATICALLY
+    // ==============================
+
+    window.addEventListener(
+        "DOMContentLoaded",
+        function() {
+            loadTable();
+        }
+    );
+
 </script>
 
 </body>
