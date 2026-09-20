@@ -1,457 +1,583 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>College Bus Tracker</title>
+<title>College Bus Tracker</title>
 
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<style>
 
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: white;
-            color: black;
-        }
+* {
+    box-sizing: border-box;
+}
 
-        h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: white;
+    color: black;
+}
 
-        p {
-            font-size: 18px;
-        }
+h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
 
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-            margin-top: 20px;
-        }
+p {
+    font-size: 18px;
+}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
+/* TABLE AREA */
 
-        th,
-        td {
-            border: 2px solid #333;
-            text-align: left;
-            vertical-align: middle;
-        }
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 20px;
+}
 
-        th {
-            background: #f2f2f2;
-            font-size: 20px;
-            padding: 12px;
-            height: 80px;
-        }
+/* IMPORTANT:
+   Don't force the table into the screen width.
+*/
 
-        td {
-            font-size: 18px;
-            min-height: 60px;
-        }
+table {
+    border-collapse: collapse;
+    width: max-content;
+    min-width: 700px;
+}
 
-        td[contenteditable="true"] {
-            padding: 14px;
-            min-height: 60px;
-            outline: none;
-            white-space: normal;
-            overflow-wrap: break-word;
-            word-break: normal;
-        }
+th,
+td {
+    border: 2px solid #333;
+    text-align: left;
+    vertical-align: middle;
+}
 
-        td[contenteditable="true"]:focus {
-            background: #fffde7;
-        }
+/* HEADER */
 
-        button {
-            font-size: 18px;
-            padding: 12px 18px;
-            margin: 15px 8px 0 0;
-            cursor: pointer;
-        }
+th {
+    background: #f2f2f2;
+    font-size: 20px;
+    padding: 14px;
+    min-width: 150px;
+}
 
-        #message {
-            margin-top: 20px;
-            font-size: 20px;
-            font-weight: bold;
-        }
+/* CELLS */
 
-        @media (max-width: 600px) {
+td {
+    font-size: 18px;
+    padding: 14px;
+    min-width: 150px;
+}
 
-            body {
-                padding: 10px;
-            }
+/* EDITABLE CELLS */
 
-            h1 {
-                font-size: 28px;
-            }
+td[contenteditable="true"] {
+    outline: none;
 
-            p {
-                font-size: 17px;
-            }
+    /* Keep words like Udangudi together */
+    white-space: nowrap;
 
-            th {
-                font-size: 17px;
-                padding: 10px;
-            }
+    /* Do not break words */
+    overflow-wrap: normal;
+    word-break: normal;
+}
 
-            td {
-                font-size: 17px;
-            }
+td[contenteditable="true"]:focus {
+    background: #fffde7;
+}
 
-            td[contenteditable="true"] {
-                padding: 12px 8px;
-            }
+/* BUTTONS */
 
-            button {
-                font-size: 17px;
-                padding: 10px 14px;
-            }
-        }
-    </style>
+button {
+    font-size: 18px;
+    padding: 12px 18px;
+    margin: 15px 8px 0 0;
+    cursor: pointer;
+}
+
+#message {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    p {
+        font-size: 17px;
+    }
+
+    table {
+        min-width: 700px;
+    }
+
+    th {
+        font-size: 18px;
+        padding: 14px;
+        min-width: 160px;
+    }
+
+    td {
+        font-size: 18px;
+        padding: 14px;
+        min-width: 160px;
+    }
+
+    button {
+        font-size: 17px;
+        padding: 10px 14px;
+    }
+}
+
+</style>
 </head>
 
 <body>
 
-    <h1>🚌 College Bus Tracker</h1>
+<h1>🚌 College Bus Tracker</h1>
 
-    <p>Welcome to my college bus tracker!</p>
-
-    <div class="table-container">
-
-        <table id="busTable">
-
-            <thead>
-                <tr>
-                    <th>Starting Place</th>
-                    <th>Time</th>
-                    <th>Bus Stops</th>
-                    <th>Notes</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                <tr>
-                    <td contenteditable="true">Your Place</td>
-                    <td contenteditable="true">6:30 AM</td>
-                    <td contenteditable="true">Stop 1, Stop 2</td>
-                    <td contenteditable="true">Morning bus</td>
-                </tr>
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-    <button onclick="addRow()">➕ Add Row</button>
-
-    <button onclick="addColumn()">➕ Add Column</button>
-
-    <button onclick="saveData()">💾 Save Changes</button>
-
-    <div id="message"></div>
+<p>Welcome to my college bus tracker!</p>
 
 
-    <script>
+<div class="table-container">
 
-        // ==========================================
-        // SUPABASE SETTINGS
-        // ==========================================
+<table id="busTable">
 
-        const SUPABASE_URL =
-            "https://nmzbitljukawlkhxnrlf.supabase.co";
+<thead>
 
-        const SUPABASE_ANON_KEY =
-            "sb_publishable_ZiAF771-GgJMzToVMdsDIg_-ag7jxAw";
+<tr>
+    <th>Starting Place</th>
+    <th>Time</th>
+    <th>Bus Stops</th>
+    <th>Notes</th>
+</tr>
 
-        const TABLE_NAME = "Data_Bus";
-
-        const supabaseClient =
-            supabase.createClient(
-                SUPABASE_URL,
-                SUPABASE_ANON_KEY
-            );
+</thead>
 
 
-        // ==========================================
-        // ADD ROW
-        // ==========================================
+<tbody>
 
-        function addRow() {
+<tr>
 
-            const table =
-                document.getElementById("busTable");
+<td contenteditable="true">Your Place</td>
 
-            const tbody =
-                table.querySelector("tbody");
+<td contenteditable="true">6:30 AM</td>
 
-            const columnCount =
-                table.querySelector("thead tr").cells.length;
+<td contenteditable="true">Stop 1, Stop 2</td>
 
-            const row =
-                document.createElement("tr");
+<td contenteditable="true">Morning bus</td>
 
-            for (let i = 0; i < columnCount; i++) {
+</tr>
 
-                const cell =
-                    document.createElement("td");
+</tbody>
 
-                cell.contentEditable = "true";
+</table>
 
-                cell.innerText = "";
-
-                row.appendChild(cell);
-            }
-
-            tbody.appendChild(row);
-        }
+</div>
 
 
-        // ==========================================
-        // ADD COLUMN
-        // ==========================================
+<button onclick="addRow()">➕ Add Row</button>
 
-        function addColumn() {
+<button onclick="addColumn()">➕ Add Column</button>
 
-            const table =
-                document.getElementById("busTable");
+<br>
 
-            const headerRow =
-                table.querySelector("thead tr");
-
-            const newHeader =
-                document.createElement("th");
-
-            newHeader.innerText = "New Column";
-
-            headerRow.appendChild(newHeader);
+<button onclick="saveData()">💾 Save Changes</button>
 
 
-            const rows =
-                table.querySelectorAll("tbody tr");
+<div id="message"></div>
 
-            rows.forEach(function(row) {
 
-                const cell =
-                    document.createElement("td");
+<script>
 
-                cell.contentEditable = "true";
+/* ==========================================
+   SUPABASE
+========================================== */
 
-                cell.innerText = "";
+const SUPABASE_URL =
+"https://nmzbitljukawlkhxnrlf.supabase.co";
 
-                row.appendChild(cell);
+const SUPABASE_ANON_KEY =
+"sb_publishable_ZiAF771-GgJMzToVMdsDIg_-ag7jxAw";
+
+const supabaseClient =
+supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
+
+
+/* ==========================================
+   ADD ROW
+========================================== */
+
+function addRow() {
+
+    const table =
+        document.getElementById("busTable");
+
+    const tbody =
+        table.querySelector("tbody");
+
+    const columnCount =
+        table.querySelector("thead tr").cells.length;
+
+    const row =
+        document.createElement("tr");
+
+    for (let i = 0; i < columnCount; i++) {
+
+        const cell =
+            document.createElement("td");
+
+        cell.contentEditable = "true";
+
+        cell.innerText = "";
+
+        row.appendChild(cell);
+    }
+
+    tbody.appendChild(row);
+}
+
+
+/* ==========================================
+   ADD COLUMN
+========================================== */
+
+function addColumn() {
+
+    const table =
+        document.getElementById("busTable");
+
+    const headerRow =
+        table.querySelector("thead tr");
+
+    const newHeader =
+        document.createElement("th");
+
+    newHeader.innerText = "New Column";
+
+    headerRow.appendChild(newHeader);
+
+
+    const rows =
+        table.querySelectorAll("tbody tr");
+
+    rows.forEach(function(row) {
+
+        const cell =
+            document.createElement("td");
+
+        cell.contentEditable = "true";
+
+        cell.innerText = "";
+
+        row.appendChild(cell);
+
+    });
+}
+
+
+/* ==========================================
+   GET TABLE DATA
+========================================== */
+
+function getTableData() {
+
+    const table =
+        document.getElementById("busTable");
+
+    const headers = [];
+
+    const headerCells =
+        table.querySelectorAll("thead th");
+
+    headerCells.forEach(function(cell) {
+
+        headers.push(
+            cell.innerText.trim()
+        );
+
+    });
+
+
+    const rows = [];
+
+    const bodyRows =
+        table.querySelectorAll("tbody tr");
+
+    bodyRows.forEach(function(row) {
+
+        const rowData = [];
+
+        row.querySelectorAll("td")
+            .forEach(function(cell) {
+
+                rowData.push(
+                    cell.innerText.trim()
+                );
 
             });
-        }
+
+        rows.push(rowData);
+
+    });
 
 
-        // ==========================================
-        // GET TABLE DATA
-        // ==========================================
-
-        function getTableData() {
-
-            const table =
-                document.getElementById("busTable");
-
-            const headers = [];
-
-            table.querySelectorAll("thead th")
-                .forEach(function(cell) {
-
-                    headers.push(
-                        cell.innerText.trim()
-                    );
-
-                });
+    return {
+        headers: headers,
+        rows: rows
+    };
+}
 
 
-            const rows = [];
+/* ==========================================
+   SAVE DATA
+========================================== */
 
-            table.querySelectorAll("tbody tr")
-                .forEach(function(row) {
+async function saveData() {
 
-                    const rowData = [];
+    const message =
+        document.getElementById("message");
 
-                    row.querySelectorAll("td")
-                        .forEach(function(cell) {
-
-                            rowData.push(
-                                cell.innerText.trim()
-                            );
-
-                        });
-
-                    rows.push(rowData);
-
-                });
+    message.innerText =
+        "⏳ Saving...";
 
 
-            return {
-                headers: headers,
-                rows: rows
-            };
-        }
+    const tableData =
+        getTableData();
 
 
-        // ==========================================
-        // SAVE DATA
-        // ==========================================
+    try {
 
-        async function saveData() {
+        /* Delete previous saved record */
 
-            const message =
-                document.getElementById("message");
+        const { error: deleteError } =
+            await supabaseClient
+                .from("Data_Bus")
+                .delete()
+                .neq("id", 0);
+
+
+        if (deleteError) {
+
+            console.error(deleteError);
 
             message.innerText =
-                "⏳ Saving...";
+                "❌ Delete error: " +
+                deleteError.message;
 
-
-            const tableData =
-                getTableData();
-
-
-            try {
-
-                // Delete previous saved row
-                const { error: deleteError } =
-                    await supabaseClient
-                        .from(TABLE_NAME)
-                        .delete()
-                        .gte("id", 0);
-
-
-                if (deleteError) {
-
-                    console.error(deleteError);
-
-                    message.innerText =
-                        "❌ Delete error: " +
-                        deleteError.message;
-
-                    return;
-                }
-
-
-                // Insert new saved data
-                const { error: insertError } =
-                    await supabaseClient
-                        .from(TABLE_NAME)
-                        .insert([
-                            {
-                                data: tableData
-                            }
-                        ]);
-
-
-                if (insertError) {
-
-                    console.error(insertError);
-
-                    message.innerText =
-                        "❌ Save error: " +
-                        insertError.message;
-
-                    return;
-                }
-
-
-                message.innerText =
-                    "✅ Bus data saved successfully!";
-
-            }
-
-            catch (error) {
-
-                console.error(error);
-
-                message.innerText =
-                    "❌ Something went wrong.";
-
-            }
+            return;
         }
 
 
-        // ==========================================
-        // LOAD DATA
-        // ==========================================
+        /* Insert new record */
 
-        async function loadData() {
-
-            const message =
-                document.getElementById("message");
-
-
-            try {
-
-                const { data, error } =
-                    await supabaseClient
-                        .from(TABLE_NAME)
-                        .select("*")
-                        .order("id", {
-                            ascending: false
-                        })
-                        .limit(1);
+        const { error: insertError } =
+            await supabaseClient
+                .from("Data_Bus")
+                .insert([
+                    {
+                        data: tableData
+                    }
+                ]);
 
 
-                if (error) {
+        if (insertError) {
 
-                    console.error(error);
+            console.error(insertError);
 
-                    message.innerText =
-                        "❌ Load error: " +
-                        error.message;
+            message.innerText =
+                "❌ Save error: " +
+                insertError.message;
 
-                    return;
-                }
-
-
-                if (!data || data.length === 0) {
-
-                    message.innerText =
-                        "ℹ️ No saved bus data yet.";
-
-                    return;
-                }
+            return;
+        }
 
 
-                const savedData =
-                    data[0].data;
+        message.innerText =
+            "✅ Bus data saved successfully!";
 
 
-                if (!savedData) {
+    } catch (error) {
 
-                    message.innerText =
-                        "ℹ️ No data found.";
+        console.error(error);
 
-                    return;
-                }
+        message.innerText =
+            "❌ Something went wrong.";
+
+    }
+
+}
 
 
-                const table =
-                    document.getElementById("busTable");
+/* ==========================================
+   LOAD DATA
+========================================== */
+
+async function loadData() {
+
+    const message =
+        document.getElementById("message");
 
 
-                // ==================================
-                // RESTORE HEADERS
-                // ==================================
+    try {
 
-                const headerRow =
+        const { data, error } =
+            await supabaseClient
+                .from("Data_Bus")
+                .select("*")
+                .order("id", {
+                    ascending: false
+                })
+                .limit(1);
+
+
+        if (error) {
+
+            console.error(error);
+
+            message.innerText =
+                "❌ Load error: " +
+                error.message;
+
+            return;
+        }
+
+
+        if (!data || data.length === 0) {
+
+            message.innerText =
+                "ℹ️ No saved bus data yet.";
+
+            return;
+        }
+
+
+        const savedData =
+            data[0].data;
+
+
+        if (!savedData) {
+
+            message.innerText =
+                "ℹ️ No data found.";
+
+            return;
+        }
+
+
+        const table =
+            document.getElementById("busTable");
+
+
+        /* RESTORE HEADERS */
+
+        const headerRow =
+            table.querySelector("thead tr");
+
+        headerRow.innerHTML = "";
+
+
+        savedData.headers.forEach(
+            function(header) {
+
+                const th =
+                    document.createElement("th");
+
+                th.innerText = header;
+
+                headerRow.appendChild(th);
+
+            }
+        );
+
+
+        /* RESTORE BODY */
+
+        const tbody =
+            table.querySelector("tbody");
+
+        tbody.innerHTML = "";
+
+
+        savedData.rows.forEach(
+            function(rowData) {
+
+                const row =
+                    document.createElement("tr");
+
+
+                rowData.forEach(
+                    function(value) {
+
+                        const cell =
+                            document.createElement("td");
+
+                        cell.contentEditable =
+                            "true";
+
+                        cell.innerText =
+                            value;
+
+                        row.appendChild(cell);
+
+                    }
+                );
+
+
+                tbody.appendChild(row);
+
+            }
+        );
+
+
+        message.innerText =
+            "✅ Saved bus data loaded!";
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        message.innerText =
+            "❌ Could not load data.";
+
+    }
+
+}
+
+
+/* ==========================================
+   LOAD WHEN WEBSITE OPENS
+========================================== */
+
+window.addEventListener(
+    "load",
+    function() {
+        loadData();
+    }
+);
+
+</script>
+
+</body>
+    </html>               const headerRow =
                     table.querySelector("thead tr");
 
                 headerRow.innerHTML = "";
