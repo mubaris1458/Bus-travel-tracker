@@ -179,7 +179,6 @@
         const SUPABASE_ANON_KEY =
             "sb_publishable_ZiAF771-GgJMzToVMdsDIg_-ag7jxAw";
 
-        // CORRECT TABLE NAME
         const TABLE_NAME = "bus_data";
 
 
@@ -239,7 +238,8 @@
             const newHeader =
                 document.createElement("th");
 
-            newHeader.innerText = "New Column";
+            newHeader.innerText =
+                "New Column";
 
             headerRow.appendChild(newHeader);
 
@@ -330,26 +330,6 @@
 
             try {
 
-                // Delete previous saved data
-                const { error: deleteError } =
-                    await supabaseClient
-                        .from(TABLE_NAME)
-                        .delete()
-                        .gte("id", 0);
-
-
-                if (deleteError) {
-
-                    console.error(deleteError);
-
-                    message.innerText =
-                        "❌ Delete error: " +
-                        deleteError.message;
-
-                    return;
-                }
-
-
                 // Insert new saved data
                 const { error: insertError } =
                     await supabaseClient
@@ -390,7 +370,7 @@
 
 
         // ==========================================
-        // LOAD DATA FROM SUPABASE
+        // LOAD DATA
         // ==========================================
 
         async function loadData() {
@@ -465,7 +445,8 @@
                         const th =
                             document.createElement("th");
 
-                        th.innerText = header;
+                        th.innerText =
+                            header;
 
                         headerRow.appendChild(th);
 
@@ -547,4 +528,4 @@
 
 </body>
 
-        </html>
+</html>
