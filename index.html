@@ -179,7 +179,9 @@
         const SUPABASE_ANON_KEY =
             "sb_publishable_ZiAF771-GgJMzToVMdsDIg_-ag7jxAw";
 
-        const TABLE_NAME = "Data_Bus";
+        // CORRECT TABLE NAME
+        const TABLE_NAME = "bus_data";
+
 
         const supabaseClient =
             supabase.createClient(
@@ -328,7 +330,7 @@
 
             try {
 
-                // Delete previous saved row
+                // Delete previous saved data
                 const { error: deleteError } =
                     await supabaseClient
                         .from(TABLE_NAME)
@@ -388,7 +390,7 @@
 
 
         // ==========================================
-        // LOAD DATA
+        // LOAD DATA FROM SUPABASE
         // ==========================================
 
         async function loadData() {
@@ -529,13 +531,15 @@
 
 
         // ==========================================
-        // LOAD WHEN WEBSITE OPENS
+        // LOAD DATA WHEN WEBSITE OPENS
         // ==========================================
 
         window.addEventListener(
             "load",
             function() {
+
                 loadData();
+
             }
         );
 
@@ -543,4 +547,4 @@
 
 </body>
 
-    </html>
+        </html>
